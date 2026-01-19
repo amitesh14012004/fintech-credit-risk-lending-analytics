@@ -8,8 +8,8 @@ st.title("Fintech Credit Risk & Lending Decision System")
 st.caption("Interactive demo for fintech-style credit approval and pricing")
 
 # Load trained artifacts
-model = joblib.load("dashboard/credit_model.pkl")
-scaler = joblib.load("dashboard/scaler.pkl")
+model = joblib.load("credit_model.pkl")
+scaler = joblib.load("scaler.pkl")
 
 st.subheader("Enter Borrower Details")
 
