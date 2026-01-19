@@ -28,7 +28,7 @@ model = joblib.load("credit_model.pkl")
 scaler = joblib.load("scaler.pkl")
 
 # -----------------------------
-# Feature schema (MUST match training order)
+# Feature schema (ORDER MATTERS)
 # -----------------------------
 FEATURE_COLUMNS = [
     "MonthlyIncome",
@@ -84,6 +84,7 @@ if st.button("Evaluate Credit Risk"):
 
     any_past_due = 1 if past_due == "Yes" else 0
 
+    # Create DataFrame (for readability)
     input_df = pd.DataFrame(
         [[
             MonthlyIncome,
@@ -95,7 +96,9 @@ if st.button("Evaluate Credit Risk"):
         columns=FEATURE_COLUMNS
     )
 
-    input_scaled = scaler.transform(input_df)
+    # ✅ IMPORTANT FIX: convert to NumPy before scaling
+    input_scaled = scaler.transform(input_df.values)
+
     default_prob = model.predict_proba(input_scaled)[0][1]
 
     # Decision rules
