@@ -17,8 +17,8 @@ st.title("Fintech Credit Risk & Lending Decision System")
 st.caption("Interactive demo for credit approval and risk-based pricing")
 
 # ---------------- Load artifacts ----------------
-model = joblib.load("credit_model.pkl")
-scaler = joblib.load("scaler.pkl")
+model = joblib.load("credit_model .pkl")
+scaler = joblib.load("scaler .pkl")
 
 # ---------------- User inputs ----------------
 st.subheader("Enter Borrower Details")
