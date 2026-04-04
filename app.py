@@ -73,7 +73,17 @@ data["credit_per_line"] = data["RevolvingUtilizationOfUnsecuredLines"] / (
 
 data["risk_score"] = data["late_severity"] * data["DebtRatio"]
 data["stress_score"] = data["total_late"] / (data["MonthlyIncome"] + 1)
+# ================================
+# ENSURE SAME FEATURES AS TRAINING
+# ================================
 
+# Add missing columns (if any)
+for col in feature_names:
+    if col not in data.columns:
+        data[col] = 0
+
+# Keep only required columns + correct order
+data = data[feature_names]
 # ================================
 # SCALE
 # ================================
