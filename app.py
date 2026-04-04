@@ -11,10 +11,11 @@ st.title("💳 AI Credit Risk Decision System")
 st.markdown("Predict default risk and understand **why** using AI + SHAP")
 
 # ================================
-# LOAD MODEL + SCALER
+# LOAD MODEL + SCALER + FEATURES
 # ================================
 model = pickle.load(open("xgb_model.pkl", "rb"))
 scaler = pickle.load(open("scaler.pkl", "rb"))
+feature_names = pickle.load(open("features.pkl", "rb"))  # 🔥 IMPORTANT
 
 # ================================
 # INPUT SECTION
@@ -49,7 +50,7 @@ data = pd.DataFrame({
 })
 
 # ================================
-# FEATURE ENGINEERING (SAME AS MODEL)
+# FEATURE ENGINEERING
 # ================================
 data["income_per_person"] = data["MonthlyIncome"] / (data["NumberOfDependents"] + 1)
 
@@ -73,17 +74,16 @@ data["credit_per_line"] = data["RevolvingUtilizationOfUnsecuredLines"] / (
 
 data["risk_score"] = data["late_severity"] * data["DebtRatio"]
 data["stress_score"] = data["total_late"] / (data["MonthlyIncome"] + 1)
+
 # ================================
 # ENSURE SAME FEATURES AS TRAINING
 # ================================
-
-# Add missing columns (if any)
 for col in feature_names:
     if col not in data.columns:
         data[col] = 0
 
-# Keep only required columns + correct order
 data = data[feature_names]
+
 # ================================
 # SCALE
 # ================================
@@ -93,9 +93,7 @@ data_scaled = scaler.transform(data)
 # PREDICTION
 # ================================
 prob = model.predict_proba(data_scaled)[0][1]
-
-# Use your optimized threshold
-threshold = 0.78  
+threshold = 0.78
 
 prediction = "⚠️ High Risk (Likely Default)" if prob > threshold else "✅ Low Risk"
 
@@ -118,26 +116,43 @@ with col2:
     st.write(data.T)
 
 # ================================
-# SHAP EXPLANATION
+# SHAP EXPLANATION (FIXED)
 # ================================
 st.subheader("🔍 Why this prediction? (SHAP Explainability)")
 
-explainer = shap.Explainer(model, data_scaled)
-shap_values = explainer(data_scaled)
+explainer = shap.Explainer(model, data)  # ✅ FIXED
+shap_values = explainer(data)
 
 fig, ax = plt.subplots()
 shap.plots.waterfall(shap_values[0], show=False)
 st.pyplot(fig)
 
 # ================================
-# GLOBAL INFO (OPTIONAL)
+# SIMPLE TEXT EXPLANATION (🔥 BONUS)
+# ================================
+st.subheader("🧠 Key Risk Drivers")
+
+top_features = np.abs(shap_values.values[0])
+top_idx = np.argsort(top_features)[-3:]
+
+for i in top_idx[::-1]:
+    feature = data.columns[i]
+    value = data.iloc[0][feature]
+
+    if value > data[feature].mean():
+        st.write(f"🔺 High **{feature}** is increasing risk")
+    else:
+        st.write(f"🔻 Low **{feature}** is reducing risk")
+
+# ================================
+# FOOTER
 # ================================
 st.markdown("---")
 st.markdown("### 🧠 Model Insights")
 
 st.write("""
-- High **late payments** → increases default risk  
-- High **debt ratio** → increases risk  
-- Higher **income stability** → reduces risk  
-- Model uses AI + Explainability (SHAP)
+- Late payments strongly increase default probability  
+- High debt burden increases financial stress  
+- Income stability reduces risk  
+- Model uses ML + SHAP for explainability  
 """)
