@@ -118,13 +118,24 @@ with col2:
 # ================================
 # SHAP EXPLANATION (FIXED)
 # ================================
-st.subheader("🔍 Why this prediction? (SHAP Explainability)")
+# FIX 1: Use TreeExplainer directly — correct for XGBoost
+explainer = shap.TreeExplainer(model)
 
-explainer = shap.Explainer(model, data)  # ✅ FIXED
-shap_values = explainer(data)
+# FIX 2: Pass the unscaled data or a proper background sample
+# The explainer works on raw model input
+shap_values = explainer.shap_values(data_scaled)
 
+# FIX 3: Waterfall plot needs the Explanation object, use this:
 fig, ax = plt.subplots()
-shap.plots.waterfall(shap_values[0], show=False)
+shap.plots.waterfall(
+    shap.Explanation(
+        values=shap_values[0],
+        base_values=explainer.expected_value,
+        data=data.iloc[0],
+        feature_names=list(data.columns)
+    ),
+    show=False
+)
 st.pyplot(fig)
 
 # ================================
